@@ -1,0 +1,55 @@
+{
+	"//": "MPM Testfiles",
+
+	"SimSetting": {
+		"box_min"			: [0.0, 0.0, 0.0],
+		"box_max"			: [2.0, 2.0, 2.0],
+		"box_width" 	: 1.0			,
+		"box_height" 	: 1.0			,
+		"bound_pad"		: 0.1			,
+		"dt" 					: 0.0001	,
+		"d_width" 		: 0.02	,
+		"end_time" 		: 1.05			,
+		"num_points" 	: 2				,
+		"frame"				: 100
+	},
+	
+	"MaterialCondition":{
+		"ConstitutiveModel" : "Elastic",
+		"E"									: 10000.0	,
+		"nu" 								: 0.2			,
+		"hardening" 				: 10.0		,
+		"mu" 								: 10000.0	,
+		"kappa" 						: 10000.0	,
+		"eta"								: 1.0			,
+		"h" 								: 1.0			,
+		"sigma_Y" 					: 0.01
+	},
+
+	"SetPointCube":[
+		{
+			"min":[0.1,0.1,0.1],
+			"max":[0.3,0.3,0.3],
+			"condition":"stick"
+		}
+	],
+
+	
+	"#SetPointFromFile":[
+		{
+			"filename":"/Users/kn/Downloads/MPMTest/bunny_pt",
+			"condition":"stick"
+		}
+	],
+
+	"#BoundaryFromSDF":[
+		{
+			"filename":"/Users/kn/Downloads/MPMTest/col_sdf",
+			"condition":"stick"
+		}
+	]
+	
+}
+
+
+
