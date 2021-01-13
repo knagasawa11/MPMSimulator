@@ -1,0 +1,4 @@
+/Users/kn/Documents/PhySimCode/xproj/MPMSimulator/build/CMakeFiles/rebuild_cache.dir
+/Users/kn/Documents/PhySimCode/xproj/MPMSimulator/build/CMakeFiles/edit_cache.dir
+/Users/kn/Documents/PhySimCode/xproj/MPMSimulator/build/CMakeFiles/Main3D.dir
+/Users/kn/Documents/PhySimCode/xproj/MPMSimulator/build/CMakeFiles/Main2D.dir
