@@ -94,7 +94,7 @@ inline bool MPM::RigidBody::loadSDF()
 		m_cell_delta(i) = cell_delta[i];
 		m_grid_start(i) = grid_start[i];
 	}
-	m_grid_start(2) += 1.0;
+	//m_grid_start(2) += 1.0;
 																 
 	m_sdf_vals.resize(flat_grid_dimension);
 	

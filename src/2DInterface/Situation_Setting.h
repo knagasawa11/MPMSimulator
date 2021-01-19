@@ -17,11 +17,13 @@ namespace MPM{
 struct PointCube{
 	Vectord min;
 	Vectord max;
+	double  rho;
 	
 	PointCube (){};
-	PointCube (Vectord min, Vectord max)
+	PointCube (Vectord min, Vectord max, double rho)
 		: min(min),
-			max(max)
+			max(max),
+			rho(rho)
 		{};
 	void Set_MaterialPoints(MPM::SimulationState& sim_setting, const Vector3d& color);
 };
@@ -35,7 +37,10 @@ void PointCube::Set_MaterialPoints(MPM::SimulationState& sim_setting, const Vect
 	Vectord small_val = Vectord::Constant(0.000001);
 	Vectord padding = Vectord::Constant(sim_setting.SimulationGridsWidth/(sim_setting.materialpointsnum + 1));
 	Vectori totalpoints = sim_setting.materialpointsnum*((max - min + small_val)/sim_setting.SimulationGridsWidth).cast<int>();
-	
+	double hl = 0.5*(sim_setting.SimulationGridsWidth/sim_setting.materialpointsnum);
+	double volume = 8*hl*hl*hl;
+	double mass = rho*volume;
+	std::cout << mass << std::endl;
 	int num = 1;
 	for(int i=0;i<SET::dim;++i)
 	{
@@ -46,7 +51,7 @@ void PointCube::Set_MaterialPoints(MPM::SimulationState& sim_setting, const Vect
 	{
 		auto node = MPM::flat2node<SET::dim>(i, totalpoints);
 		const Vectord mp_pos = node.cast<double>()*(sim_setting.SimulationGridsWidth /sim_setting.materialpointsnum) + min + padding;
-		sim_setting.mp.add_points(mp_pos, Vectord::Zero(SET::dim), color);
+		sim_setting.mp.add_points(mp_pos, Vectord::Zero(SET::dim), mass, volume, color);
 		//std::cout << i << " " << mp_pos << std::endl;
 	}
 	std::cout << "total points " << totalpoints << std::endl;
@@ -118,7 +123,7 @@ inline void Set_Material_Point_Randomly(const Vectord& center,const double& mat_
 		//auto rand = Eigen::MatrixXd::Random(SET::dim, 1)*2.0 - Eigen::MatrixXd::One(SET::dim, 1);
 		Vectord rand = Vectord::Random(SET::dim);
 		const Vectord mp_pos_rand = rand*mat_width + center;
-		sim_setting.mp.add_points(mp_pos_rand, Vectord::Zero(SET::dim), color);
+		sim_setting.mp.add_points(mp_pos_rand, Vectord::Zero(SET::dim),1.0, 1.0, color);
 	}
 }
 

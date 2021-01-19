@@ -249,12 +249,12 @@ inline void HerschelBulkley::set_material_parameter()
 inline Matrixd HerschelBulkley::cal_particle_stress(const Matrixd& F, const double& Jp, const Matrixd& b)
 {
 	
-	double J = F.determinant();
+	const double J = F.determinant();
 	const auto b_bar = std::pow(J,-2.0/SET::dim)*b;
 	const auto dev_b = b_bar - Matrixd::Identity()*b_bar.trace()/SET::dim;
 	
 	// Compute stress with volume dependent and preserving functions ( Yue (2) )
-	const Matrixd FP = 0.5*kappa*(J*J - 1.0)*Matrixd::Identity() + mu * dev_b ;
+	const Matrixd FP = 0.5*kappa*(J + 1.0)*(J - 1.0)*Matrixd::Identity() + mu * dev_b ;
 
 	return std::move(FP);
 
@@ -285,10 +285,11 @@ struct Functor {
 inline std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_correction(const Matrixd& F, const double& Jp, const Matrixd& b)
 {
 	
-	double J = F.determinant();
+	const double J = F.determinant();
 	const auto b_bar = std::pow(J,-2.0/SET::dim)*b;
 	const auto dev_b = b_bar - Matrixd::Identity()*b_bar.trace()/SET::dim;
 	const double sigma_rt = std::sqrt(2.0/SET::dim)*sigma_Y;
+	const double h_inv		= 1.0/h;
 	double s_pro = mu*dev_b.norm();
 	
 	
@@ -296,10 +297,11 @@ inline std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_corr
 	if(mu*dev_b.norm() > sigma_rt){
 		
 	//define plastic flow function
-	std::function<double(double)> sf = [s_pro, b_bar, &_mu = mu, &_eta = eta, &_h = h, &_sigma_Y = sigma_Y, &_dt = dt](double s){
-		const double h_inv		= 1.0/_h;
-		const double sigma_rt = std::sqrt(2.0/SET::dim)*_sigma_Y;
-		return std::pow(_eta,h_inv)*(s - s_pro) + (2.0/SET::dim)*b_bar.trace()*_mu*_dt*std::pow(s - sigma_rt,h_inv);
+//	std::function<double(double)> sf = [s_pro, b_bar, &_mu = mu, &_eta = eta, &_h = h, &_sigma_Y = sigma_Y, &_dt = dt](double s){
+		std::function<double(double)> sf = [s_pro, b_bar, &_mu = mu, &_eta = eta, &_h_inv = h_inv, &_sigma_rt = sigma_rt, &_dt = dt](double s){
+		//const double h_inv		= 1.0/_h;
+		//const double sigma_rt = std::sqrt(2.0/SET::dim)*_sigma_Y;
+		return std::pow(_eta,_h_inv)*(s - s_pro) + (2.0/SET::dim)*b_bar.trace()*_mu*_dt*std::pow(s - _sigma_rt,_h_inv);
 	};
 
 	boost::math::tools::eps_tolerance<double>
@@ -307,8 +309,10 @@ inline std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_corr
 	boost::uintmax_t max = 100;
 	std::pair<double, double> r = boost::math::tools::bisect(sf,sigma_rt , mu*dev_b.norm(), tol, max);
 	s_pro = (r.first + r.second) / 2.0;
-		
+	//std::cout << sigma_rt << " " << s_pro << " " << mu*dev_b.norm() << std::endl;
+	//std::cout << sf(s_pro) << std::endl;
 	}
+
 	
 	Matrixd b_bar_new;
 	Matrixd b_bar_norm;
@@ -322,6 +326,8 @@ inline std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_corr
 	b_bar_norm = std::pow(b_bar_new.determinant(),-1.0/SET::dim)*b_bar_new;
 	}
 	const auto b_new = b_bar_norm*std::pow(J,2.0/SET::dim);
+	
+	//std::cout << b_new.determinant() << " " << F.determinant()*F.determinant() << " " << std::endl;
 	
 	return {F, Jp, b_new};
 }

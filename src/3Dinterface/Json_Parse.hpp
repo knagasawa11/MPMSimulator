@@ -138,7 +138,8 @@ inline void readJson(const std::string json_file, MPM::MaterialParameters& mat_p
 	for (auto& element : j["SetPointCube"]) {
 		Vector3d	min = CheckJson<Vector3d>(element,"min");
 		Vector3d	max = CheckJson<Vector3d>(element,"max");
-		situation_set.set_mat_point.pointcubes.push_back(MPM::PointCube{min, max});
+		double		rho = CheckJson<double>(element,"rho");
+		situation_set.set_mat_point.pointcubes.push_back(MPM::PointCube{min, max, rho});
 		//situation_set.set_mat_point.pointfiles.push_back(MPM::PointFile{filename});
 	}
 
@@ -146,7 +147,9 @@ inline void readJson(const std::string json_file, MPM::MaterialParameters& mat_p
 	std::cout << "SetPointFromFile" << std::endl;
 	for (auto& element : j["SetPointFromFile"]) {
 		std::string filename = CheckJson<std::string>(element,"filename");
-		situation_set.set_mat_point.pointfiles.push_back(MPM::PointFile{filename});
+		double			rho 		 = CheckJson<double>(element,"rho");
+		situation_set.set_mat_point.pointfiles.push_back(MPM::PointFile{filename, rho});
+		
 	}
 	for (auto& e : situation_set.set_mat_point.pointfiles) {
 		std::cout << "SetPointFromFile Filename : " << e.point_file_string << std::endl;

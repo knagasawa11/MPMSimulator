@@ -22,10 +22,12 @@ namespace MPM{
 
 struct PointFile{
 	std::string point_file_string;
+	double  rho;
 	
 	PointFile (){};
-	PointFile (std::string filename)
-		: point_file_string(filename)
+	PointFile (std::string filename, double rho)
+		: point_file_string(filename),
+			rho(rho)
 		{};
 	
 	void Set_Material_Point_FromFile(MPM::SimulationState& sim_setting, const Vector3d& color);
@@ -34,11 +36,13 @@ struct PointFile{
 struct PointCube{
 	Vectord min;
 	Vectord max;
+	double  rho;
 	
 	PointCube (){};
-	PointCube (Vectord min, Vectord max)
+	PointCube (Vectord min, Vectord max, double rho)
 		: min(min),
-			max(max)
+			max(max),
+			rho(rho)
 		{};
 	void Set_MaterialPoints(MPM::SimulationState& sim_setting, const Vector3d& color);
 };
@@ -169,6 +173,10 @@ void PointCube::Set_MaterialPoints(MPM::SimulationState& sim_setting, const Vect
 	Vectord padding = Vectord::Constant(sim_setting.SimulationGridsWidth/(sim_setting.materialpointsnum + 1));
 	Vectori totalpoints = sim_setting.materialpointsnum*((max - min + small_val)/sim_setting.SimulationGridsWidth).cast<int>();
 	
+	double hl = 0.5*(sim_setting.SimulationGridsWidth/sim_setting.materialpointsnum);
+	double volume = 8*hl*hl*hl;
+	double mass = rho*volume;
+	
 	int num = 1;
 	for(int i=0;i<SET::dim;++i)
 	{
@@ -179,7 +187,7 @@ void PointCube::Set_MaterialPoints(MPM::SimulationState& sim_setting, const Vect
 	{
 		auto node = MPM::flat2node<SET::dim>(i, totalpoints);
 		const Vectord mp_pos = node.cast<double>()*(sim_setting.SimulationGridsWidth /sim_setting.materialpointsnum) + min + padding;
-		sim_setting.mp.add_points(mp_pos, Vectord::Zero(SET::dim), color);
+		sim_setting.mp.add_points(mp_pos, Vectord::Zero(SET::dim), mass, volume, color);
 		//std::cout << i << " " << mp_pos << std::endl;
 	}
 	std::cout << "total points " << totalpoints << std::endl;
@@ -193,7 +201,7 @@ inline void Set_Material_Point_Randomly(const Vectord& center,const double& mat_
 		//auto rand = Eigen::MatrixXd::Random(SET::dim, 1)*2.0 - Eigen::MatrixXd::One(SET::dim, 1);
 		Vectord rand = Vectord::Random(SET::dim);
 		const Vectord mp_pos_rand = rand*mat_width + center;
-		sim_setting.mp.add_points(mp_pos_rand, Vectord::Zero(SET::dim), color);
+		sim_setting.mp.add_points(mp_pos_rand, Vectord::Zero(SET::dim),1.0, 1.0, color);
 	}
 }
 
@@ -225,14 +233,16 @@ inline void PointFile::Set_Material_Point_FromFile(MPM::SimulationState& sim_set
 	//
 	std::cout << "hl is " << hl << std::endl;
 
+	double mass = rho*point_volume;
+		
 	for(int i = 0; i < num_points ; i++ ){
 		double position_data[3];
 		fread( position_data, sizeof(double), 3, point_file_dat );
 		
 		// Adopt -Z Foeward  :: -1*(position_data[2] + start_point.z()
-		const Vector3d position(position_data[0] + start_point.x(), position_data[1] + start_point.y(), -1*(position_data[2] + start_point.z()) );
+		const Vector3d position(position_data[0] + start_point.x(), position_data[1] + start_point.y(), 1*(position_data[2] + start_point.z()) );
 		//std::cout << position.x() << " " << position.y() << " " << position.z() << std::endl;
-		sim_setting.mp.add_points(position, Vectord::Zero(SET::dim), color);
+		sim_setting.mp.add_points(position, Vectord::Zero(SET::dim), mass, point_volume, color);
 		
 		num_inserted_points ++;
 	}
@@ -280,6 +290,8 @@ inline void Set_Material_Point_FromFile(MPM::SimulationState& sim_setting, const
 	//
 	std::cout << "hl is " << hl << std::endl;
 
+	double mass = 1.0*point_volume;
+		
 	for(int i = 0; i < num_points ; i++ ){
 		double position_data[3];
 		fread( position_data, sizeof(double), 3, point_file_dat );
@@ -287,7 +299,7 @@ inline void Set_Material_Point_FromFile(MPM::SimulationState& sim_setting, const
 		// Adopt -Z Foeward  :: -1*(position_data[2] + start_point.z()
 		const Vector3d position(position_data[0] + start_point.x(), position_data[1] + start_point.y(), -1*(position_data[2] + start_point.z()) );
 		//std::cout << position.x() << " " << position.y() << " " << position.z() << std::endl;
-		sim_setting.mp.add_points(position, Vectord::Zero(SET::dim), color);
+		sim_setting.mp.add_points(position, Vectord::Zero(SET::dim), mass, point_volume, color);
 		
 		num_inserted_points ++;
 	}

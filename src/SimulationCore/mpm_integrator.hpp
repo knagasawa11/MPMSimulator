@@ -54,6 +54,7 @@ namespace MPM {
 	struct Integrater
 	{
 		MPM::Basisfunctions basis_f;
+		std::vector<MPM::Basisfunctions> basis_fs;
 		MPM::SimulationState sim_state;
 		Integrater() = default;
 		//Integrater(MPM::SimulationState& _sim_setting);
@@ -139,6 +140,23 @@ inline void MPM::Integrater::set_integrater(MPM::SimulationState& _sim_setting)
 {
 	sim_state = _sim_setting;
 	basis_f.init();
+	
+	#ifdef USEOPENMP
+	//Set per_thread basis functions
+
+	basis_fs.push_back(MPM::Basisfunctions{});
+
+	for( int i = 0; i < omp_get_max_threads(); i++ )
+	{
+		basis_fs.push_back(MPM::Basisfunctions{});
+	}
+	
+	for( int i = 0; i < omp_get_max_threads(); i++ )
+	{
+		basis_fs[i].init();
+	}
+	#endif
+	
 }
 
 inline void MPM::Integrater::integrate()
@@ -148,8 +166,8 @@ inline void MPM::Integrater::integrate()
 	particle2grid();
 	gridAdvance();
 	grid2particle();
-	advection();
 	deformation_update();
+	advection();
 	
 	updateState();
 }
@@ -169,92 +187,152 @@ void MPM::Integrater::particle2grid()
 			sim_state.mg.Velocity.col(i) = Vectord::Zero();
 			sim_state.mg.Mass[i] = 0;
 	}
-
-	//sim_state.mg.Velocity = Eigen::MatrixXd::Zero(SET::dim,sim_state.mg.numgrids+1);
-	//std::fill(sim_state.mg.Mass.begin(), sim_state.mg.Mass.end(), 0.0);
-	
 	sim_state.mg.ValiedGridNodeIndices.clear();
 	
 	const int NP=sim_state.mp.numpoints;
+	#ifndef USEOPENMP
 	for(int i=0; i<NP; ++i)
 	{
-		//const Matrixd FP = sim_state.c->cal_particle_stress(sim_state.mp.F[i], sim_state.mp.F[i].determinant());
 		const Matrixd FP = sim_state.c->cal_particle_stress(sim_state.mp.F[i], sim_state.mp.J[i],sim_state.mp.b[i]);
-
 		
-		constexpr double p_vol = 1.0;
-		constexpr double particle_mass = 1.0;
+		const double p_vol = sim_state.mp.vol[i];
+		const double particle_mass = sim_state.mp.m[i];
+				
 		const Matrixd Stress = - (sim_state.dt * p_vol) * (4 * width_inv * width_inv * FP);
 		const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
 		
-		//const auto N = MPM::BasisFunction(d_from_basegrid.cast<double>());
-		
-		//const Vectori base_grid =	(sim_state.mp.Position.col(i)*width_inv - Vectord::Constant(0.5)).cast<int>();
-		//const Vectord d_from_basegrid = sim_state.mp.Position.col(i)*width_inv - base_grid.cast<double>();
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
-
-		
-		
 		
 		basis_f.set(d_from_basegrid.cast<double>());
-		//auto N = basis_f.N;
 
-		//basis_f.set(d_from_basegrid.cast<double>());
 		const Vectord mv = sim_state.mp.Velocity.col(i) * particle_mass;
-		
-		///
 		const Vectori w = Vectori::Constant(3);
-		//const auto vec_basis = basis_f.vec();
-		
-		//VectorXd mg_mass = VectorXd::Zero(std::pow(3,SET::dim));
 
-		//for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l){
-		//	Vectori node 			= MPM::flat2node(l, w);
-		//	Vectori base_node = base_grid + node;
-		//	mg_mass(l) = MPM::node2flat(base_node, sim_state.SimulationGridsnum);
-		//}
+				for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l)
+		{
+			const Vectori node 			= MPM::flat2node(l, w);
+			const Vectori base_node = base_grid + node;
+			const Vectord distance_from_index = (node.cast<double>() - d_from_basegrid) * sim_state.SimulationGridsWidth;
 
+			sim_state.mg.Velocity.col( MPM::node2flat(base_node, sim_state.SimulationGridsnum) ) += basis_f.tensor(node) * ( mv + Affine * distance_from_index );
+			sim_state.mg.Mass[ MPM::node2flat(base_node, sim_state.SimulationGridsnum) ] += particle_mass * basis_f.tensor(node);
+			
+			sim_state.mg.ValiedGridNodeIndices.push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
+		}
+	}
+	
+	#else //IF use OpenMP
+	
+	//Set per_thread_memories
+	static std::vector<MatrixXd> 							per_thread_Velocity;
+	static std::vector<std::vector<double>> 	per_thread_mass;
+	static std::vector<std::vector<int>>		 	per_thread_ValiedGridNodeIndices;
+	
+	if( per_thread_Velocity.empty() )
+	{
+		per_thread_Velocity.resize( omp_get_max_threads() );
+	}
+
+	if( per_thread_mass.empty() )
+	{
+		per_thread_mass.resize( omp_get_max_threads() );
+	}
+
+	if( per_thread_ValiedGridNodeIndices.empty() )
+	{
+		per_thread_ValiedGridNodeIndices.resize( omp_get_max_threads() );
+	}
+
+	assert( int(per_thread_Velocity.size()) == omp_get_max_threads() );
+	assert( int(per_thread_mass.size()) == omp_get_max_threads() );
+	assert( int(per_thread_ValiedGridNodeIndices.size()) == omp_get_max_threads() );
+	
+	#pragma omp parallel for
+	for( std::vector<MatrixXd>::size_type idx = 0; idx < per_thread_Velocity.size(); idx++ )
+	{
+		per_thread_Velocity[idx].setZero( SET::dim,sim_state.mg.numgrids );
+	}
+	
+	#pragma omp parallel for
+	for( std::vector<std::vector<double>>::size_type idx = 0; idx < per_thread_mass.size(); idx++ )
+	{
+		per_thread_mass[idx].resize( sim_state.mg.numgrids );
+		std::fill(per_thread_mass[idx].begin(), per_thread_mass[idx].end(), 0.0);
+	}
+	
+	#pragma omp parallel for
+	for( std::vector<std::vector<int>>::size_type idx = 0; idx < per_thread_ValiedGridNodeIndices.size(); idx++ )
+	{
+		per_thread_ValiedGridNodeIndices[idx].clear();
+	}
+
+	
+	#pragma omp parallel for
+	for(int i=0; i<NP; ++i)
+	{
+		//get omp thread ID
+		const int tid{ omp_get_thread_num() };
+		assert( tid >= 0 );
+
+		const Matrixd FP = sim_state.c->cal_particle_stress(sim_state.mp.F[i], sim_state.mp.J[i],sim_state.mp.b[i]);
 		
-		//for(int i=0, Max = std::pow(3,SET::dim); i<Max; ++i)
+		const double p_vol = sim_state.mp.vol[i];
+		const double particle_mass = sim_state.mp.m[i];
+				
+		const Matrixd Stress = - (sim_state.dt * p_vol) * (4 * width_inv * width_inv * FP);
+		const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
+		
+		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
+		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
+		
+		//set basis function on omp thread ID
+		basis_fs[tid].set(d_from_basegrid.cast<double>());
+
+
+		const Vectord mv = sim_state.mp.Velocity.col(i) * particle_mass;
+		const Vectori w = Vectori::Constant(3);
+
 		for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l)
 		{
 			const Vectori node 			= MPM::flat2node(l, w);
 			const Vectori base_node = base_grid + node;
 			const Vectord distance_from_index = (node.cast<double>() - d_from_basegrid) * sim_state.SimulationGridsWidth;
-			/*
-			std::cout << "i															" << i << std::endl;
-			std::cout << "SimulationBoxMin							" << sim_state.SimulationBoxMin << std::endl;
-			std::cout << "sim_state.mp.Position.col(i)	" << sim_state.mp.Position.col(i) << std::endl;
-			std::cout << "base_grid											" << base_grid << std::endl;
-			std::cout << "node												 	" << node << std::endl;
-			std::cout << "base_node										 	" << base_node << std::endl;
-			std::cout << "distance_from_index	 					" << distance_from_index << std::endl;
-			*/
-			
-			sim_state.mg.Velocity.col( MPM::node2flat(base_node, sim_state.SimulationGridsnum) ) += basis_f.tensor(node) * ( mv + Affine * distance_from_index );
-			sim_state.mg.Mass[ MPM::node2flat(base_node, sim_state.SimulationGridsnum) ] += particle_mass * basis_f.tensor(node);
-			sim_state.mg.ValiedGridNodeIndices.push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
-			//sim_state.mg.Velocity.col( MPM::node2flat(base_node, sim_state.SimulationGridsnum) ) += vec_basis(l) * ( mv + Affine * distance_from_index );
-			//sim_state.mg.Mass[ MPM::node2flat(base_node, sim_state.SimulationGridsnum) ] += particle_mass * vec_basis(l);
-		}
-		///
-		
-		 
-		/*
-		for(int l=0;l<3;++l){for(int m=0;m<3;m++){
 
-			const Vectord distance_from_index = (Eigen::Vector2d{l, m} - d_from_basegrid) * sim_state.SimulationGridsWidth;
-			const Vectori node{l,m};
-			sim_state.mg.Velocity.col(sim_state.node2flat(base_grid.x() + l, base_grid.y() + m)) += N[l].x()*N[m].y() * ( mv + Affine * distance_from_index );
-			sim_state.mg.Mass[sim_state.node2flat(base_grid.x() + l, base_grid.y() + m)] += particle_mass * N[l].x()*N[m].y();
-			//std::cout << "N[l].x()" << N[l].x() << std::endl;
-			//std::cout << "mv" << mv << std::endl;
-			//std::cout << "Affine" << Affine << std::endl;
-			//std::cout << "distance_from_index" << distance_from_index << std::endl;
-		}}
-		*/
+			per_thread_Velocity[tid].col( MPM::node2flat(base_node, sim_state.SimulationGridsnum) ) += basis_fs[tid].tensor(node) * ( mv + Affine * distance_from_index );
+
+			per_thread_mass[tid][ MPM::node2flat(base_node, sim_state.SimulationGridsnum) ] += particle_mass * basis_fs[tid].tensor(node);
+			
+			per_thread_ValiedGridNodeIndices[tid].push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
+			//sim_state.mg.ValiedGridNodeIndices.push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
+
+		}
 	}
+	
+	#pragma omp parallel for
+	for( std::vector<MatrixXd>::size_type idx = 0; idx < per_thread_Velocity.size(); idx++ )
+	{
+		sim_state.mg.Velocity += per_thread_Velocity[idx];
+	}
+	
+	#pragma omp parallel for
+	for(int i=0; i< sim_state.mg.numgrids; ++i)
+	{
+		for( std::vector<std::vector<double>>::size_type idx = 0; idx < per_thread_mass.size(); idx++ )
+		{
+			sim_state.mg.Mass[i] += per_thread_mass[idx][i];
+		}
+	}
+
+	for( std::vector<MatrixXd>::size_type idx = 0; idx < per_thread_ValiedGridNodeIndices.size(); idx++ )
+	{
+		sim_state.mg.ValiedGridNodeIndices.insert(sim_state.mg.ValiedGridNodeIndices.end(), per_thread_ValiedGridNodeIndices[idx].begin(), per_thread_ValiedGridNodeIndices[idx].end());
+	}
+
+	#endif
+
+	
+	
 }
 
 void MPM::Integrater::gridAdvance()
@@ -268,21 +346,26 @@ void MPM::Integrater::gridAdvance()
 	
 
 		//for(int i=0,NP=sim_state.mg.numgrids;i<NP;++i)
-	for(const auto& i : sim_state.mg.ValiedGridNodeIndices)
+	const int Valied_num = sim_state.mg.ValiedGridNodeIndices.size();
+	#ifdef USEOPENMP
+	#pragma omp parallel for
+	#endif
+	for(int j=0; j < Valied_num; j++)
 	{
+			const int i = sim_state.mg.ValiedGridNodeIndices[j];
 		//if(sim_state.mg.Mass[i] > 0)
 		//{
 			sim_state.mg.Velocity.col(i) = sim_state.mg.Velocity.col(i)/sim_state.mg.Mass[i];
 			Vectord gravity = Vectord::Zero();
-			gravity.y() = -198;
+			gravity.y() = -981;
 			sim_state.mg.Velocity.col(i) += sim_state.dt * gravity;
 			
 			// Boundary and Collision behaviours ------------------
 			const double bd_bottom = sim_state.SimulationGridsWidth*0.0;
 			if(sim_state.mg.Position.col(i).y() < ( bd_bottom + sim_state.SimulationBoxMinBound.y() ) )
 			{
-				//sim_state.mg.Velocity.col(i) = Vectord::Constant(0.0);
-				sim_state.mg.Velocity.col(i).y() = std::max(0.0,sim_state.mg.Velocity.col(i).y());
+				sim_state.mg.Velocity.col(i) = Vectord::Constant(0.0);
+				//sim_state.mg.Velocity.col(i).y() = std::max(0.0,sim_state.mg.Velocity.col(i).y());
 			}
 
 			if( ( sim_state.mg.Position.col(i).array() < ( sim_state.SimulationBoxMinBound +  bd_bottom*Vectord::Ones() ).array() ).any() || (sim_state.mg.Position.col(i).array() > (sim_state.SimulationBoxMaxBound - bd_bottom*Vectord::Ones() ).array() ).any() )
@@ -309,27 +392,23 @@ void MPM::Integrater::grid2particle()
 
 	sim_state.mp.Velocity = Eigen::MatrixXd::Zero(SET::dim,sim_state.mp.numpoints);
 	std::fill(sim_state.mp.C.begin(), sim_state.mp.C.end(), Matrixd::Zero());
+
 	
-	for(int i=0,NP=sim_state.mp.numpoints; i<NP; ++i)
+	
+
+	const int NP=sim_state.mp.numpoints;
+	#ifndef USEOPENMP
+	for(int i=0; i<NP; ++i)
 	{
-		
-		//const Vectori base_grid =	(sim_state.mp.Position.col(i)*width_inv - Vectord::Constant(0.5)).cast<int>();
-		//const Vectord d_from_basegrid = sim_state.mp.Position.col(i)*width_inv - base_grid.cast<double>();
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
 		
 		
-		//auto N = MPM::BasisFunction(d_from_basegrid.cast<double>());
-		//const auto N = basis_f.N;
-		
 		basis_f.set(d_from_basegrid.cast<double>());
 		
 		const Vectori w = Vectori::Constant(3);
-		//const auto vec_basis = basis_f.vec();
-		
-		//for(int i=0, Max = std::pow(3,SET::dim); i<Max; ++i)
-		
-		for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l)
+		const int Max = std::pow(3,SET::dim);
+		for(int l=0; l<Max; ++l)
 		{
 			const Vectori node 			= MPM::flat2node(l, w);
 			const Vectori base_node = base_grid + node;
@@ -339,34 +418,107 @@ void MPM::Integrater::grid2particle()
 			
 			sim_state.mp.C[i] += 4 * width_inv * basis_f.tensor(node) * sim_state.mg.Velocity.col(MPM::node2flat(base_node, sim_state.SimulationGridsnum) )*(distance_from_index).transpose();
 		}
-		
-	/*
-		for(int l=0;l<3;++l){
-			for(int m=0;m<3;m++){
-				Vectord distance_from_index = (Eigen::Vector2d{l, m} - d_from_basegrid);
-				
-				sim_state.mp.Velocity.col(i)+= N[l].x()*N[m].y()*sim_state.mg.Velocity.col(sim_state.node2flat(base_grid.x() + l, base_grid.y() + m)) ;
-				
-				sim_state.mp.C[i] += 4 * width_inv * (N[l].x() * N[m].y() * sim_state.mg.Velocity.col(sim_state.node2flat(base_grid.x() + l, base_grid.y() + m)))*(distance_from_index).transpose();
-			}
-		}
-	 */
-	 
-		
 	}
+	#else //IF use OpenMP
+	
+	//Set per_thread memories
+	static std::vector<MatrixXd> 							per_thread_Velocity;
+	static std::vector<std::vector<Matrixd>> 	per_thread_C;
+	if( per_thread_Velocity.empty() )
+	{
+		per_thread_Velocity.resize( omp_get_max_threads() );
+	}
+
+	if( per_thread_C.empty() )
+	{
+		per_thread_C.resize( omp_get_max_threads() );
+	}
+	
+	assert( int(per_thread_Velocity.size()) == omp_get_max_threads() );
+	assert( int(per_thread_C.size()) == omp_get_max_threads() );
+
+	#pragma omp parallel for
+	for( std::vector<MatrixXd>::size_type idx = 0; idx < per_thread_Velocity.size(); idx++ )
+	{
+		per_thread_Velocity[idx].setZero( SET::dim,sim_state.mp.numpoints );
+	}
+	
+	#pragma omp parallel for
+	for( std::vector<std::vector<Matrixd>>::size_type idx = 0; idx < per_thread_C.size(); idx++ )
+	{
+		per_thread_C[idx].resize( NP );
+		std::fill(per_thread_C[idx].begin(), per_thread_C[idx].end(), Matrixd::Zero());
+	}
+	
+	#pragma omp parallel for
+	for(int i=0; i<NP; ++i)
+	{
+		//get omp thread ID
+		const int tid{ omp_get_thread_num() };
+		assert( tid >= 0 );
+		
+		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
+		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
+		
+		//set basis function on omp thread ID
+		basis_fs[tid].set(d_from_basegrid.cast<double>());
+		const Vectori w = Vectori::Constant(3);
+		const int Max = std::pow(3,SET::dim);
+		for(int l=0; l<Max; ++l)
+		{
+			const Vectori node 			= MPM::flat2node(l, w);
+			const Vectori base_node = base_grid + node;
+			const Vectord distance_from_index = (node.cast<double>() - d_from_basegrid);
+
+			per_thread_Velocity[tid].col(i) += basis_fs[tid].tensor(node)*sim_state.mg.Velocity.col( MPM::node2flat(base_node, sim_state.SimulationGridsnum)  ) ;
+
+			per_thread_C[tid][i] += 4 * width_inv * basis_fs[tid].tensor(node) * sim_state.mg.Velocity.col(MPM::node2flat(base_node, sim_state.SimulationGridsnum) )*(distance_from_index).transpose();
+		}
+	}
+	
+	for( std::vector<MatrixXd>::size_type idx = 0; idx < per_thread_Velocity.size(); idx++ )
+	{
+		sim_state.mp.Velocity += per_thread_Velocity[idx];
+	}
+	
+	#pragma omp parallel for
+	for(int i=0; i<NP; ++i)
+	{
+		for( std::vector<std::vector<Matrixd>>::size_type idx = 0; idx < per_thread_Velocity.size(); idx++ )
+		{
+			sim_state.mp.C[i] += per_thread_C[idx][i];
+		}
+	}
+	#endif
+	
 }
 
 inline void MPM::Integrater::advection()
 {
-	sim_state.mp.Position += sim_state.dt*sim_state.mp.Velocity;
+	
+	const int NP=sim_state.mp.numpoints;
+	
+	#ifdef USEOPENMP
+	#pragma omp parallel for
+	#endif
+	for(int i=0; i<NP; ++i)
+	{
+		sim_state.mp.Position.col(i) += sim_state.dt*sim_state.mp.Velocity.col(i);
+	}
+	
+
 }
 
 
 void MPM::Integrater::deformation_update()
 {
-	for(int i=0,NP=sim_state.mp.numpoints; i<NP; ++i)
+	const int NP=sim_state.mp.numpoints;
+	
+	#ifdef USEOPENMP
+	#pragma omp parallel for
+	#endif
+	for(int i=0; i<NP; ++i)
 	{
-		
 	// MLS-MPM Deformation F-update
 		const auto f = ( Matrixd::Identity() + sim_state.dt * sim_state.mp.C[i] );
 		const Matrixd F = f * sim_state.mp.F[i];

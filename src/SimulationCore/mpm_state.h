@@ -179,7 +179,7 @@ namespace MPM{
 			//auto rand = Eigen::MatrixXd::Random(SET::dim, 1)*2.0 - Eigen::MatrixXd::One(SET::dim, 1);
 			Vectord rand = Vectord::Random(SET::dim);
 			const Vectord mp_pos_rand = rand*mat_width + center;
-			mp.add_points(mp_pos_rand, Vectord::Zero(SET::dim), color);
+			mp.add_points(mp_pos_rand, Vectord::Zero(SET::dim), 1.0, 1.0, color);
 		}
 	}
 

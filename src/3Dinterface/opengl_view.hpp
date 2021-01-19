@@ -62,18 +62,128 @@ namespace OPENGL{
 		if constexpr(dim == 2){
 		glVertex3f(trans(vec.x()),trans(vec.y()),0.0);
 		} else if constexpr(dim == 3){
-		glVertex3f(trans(vec.x()),trans(vec.y()),trans(vec.z()));
+		//glVertex3f(trans(vec.x()),trans(vec.y()),trans(vec.z()));
+		glVertex3f(vec.x(), vec.y(), vec.z());
 		} else {
 			
 		}
 		glEnd();
 	}
 
+	inline void render_axis()
+	{
+
+		glLineWidth(1.0);
+		glColor3f(1.0, 1.0, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		
+		
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		
+		
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		
+		
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glEnd();
+		
+		glLineWidth(3.0);
+		
+		glColor3f(1.0, 0.0, 0.0);
+		glBegin(GL_LINES);
+		glVertex3f(0.0 , 0.0, 0.0);
+		glVertex3f(1.0 , 0.0, 0.0);
+		glEnd();
+		
+		glColor3f(0.0, 1.0, 0.0);
+		glBegin(GL_LINES);
+		glVertex3f(0.0 , 0.0, 0.0);
+		glVertex3f(0.0 , 1.0, 0.0);
+		glEnd();
+
+		glColor3f(0.0, 0.0, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(0.0 , 0.0, 0.0);
+		glVertex3f(0.0 , 0.0, 1.0);
+		glEnd();
+
+
+	}
+
 	inline void render_loop()
 	{
+		
+		
 		//glClearColor ( 1.0f, 1.0f, 1.0f, 1.0f );
 		glClearColor ( 0.0f, 0.0f, 0.0f, 1.0f );
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		render_axis();
+
+		
 		glPointSize(1);
 		glLineWidth(2.5);
 		
@@ -119,7 +229,7 @@ namespace OPENGL{
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 		//glLoadIdentity();
-		glRotated(1.0, 0.0, 1.0, 0.0); //Y軸回転
+		//glRotated(1.0, 0.0, 1.0, 0.0); //Y軸回転
 		
 		glTranslated(0.0, 0.0, 0.0); //平行移動
 		
@@ -134,8 +244,9 @@ namespace OPENGL{
 		glViewport(0, 0, w, h);
 
 		glLoadIdentity();
+		Vector3d lookmid = ( sim_setting.SimulationBoxMin + sim_setting.SimulationBoxMax ) / 2.0;
 		gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0);
-		gluLookAt(3.0, 4.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+		gluLookAt(3.0, 4.0, 5.0, lookmid.x(), lookmid.y(), lookmid.z(), 0.0, 1.0, 0.0);
 
 		//クォータニオンによる回転
 		//
@@ -161,6 +272,7 @@ namespace OPENGL{
 		
 		if(sim_setting.simulation_stop == true)
 		{
+			std::cout << sim_setting.mp.Position.col(0).transpose() << std::endl;
 			timer_main.Get_end();
 			timer_main.Show_duration();
 			exit(0);

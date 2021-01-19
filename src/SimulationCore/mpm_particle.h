@@ -55,22 +55,26 @@ namespace MPM {
 		std::vector<Matrixd> F;
 		std::vector<Matrixd> b;
 		std::vector<double> J;
+		std::vector<double> m;
+		std::vector<double> vol;
 		std::vector<Matrixd> C;
 		std::vector<Vector3d> color;
 		
 		int numpoints{0};
 		
-		void add_points(const Vectord &position, const Vectord &velocity, const Vector3d& c);
+		void add_points(const Vectord &position, const Vectord &velocity, const double& mass, const double& volume, const Vector3d& c);
 		void show();
 	};
 	
-	inline void MaterialPoints::add_points(const Vectord &position, const Vectord &velocity, const Vector3d& c)
+	inline void MaterialPoints::add_points(const Vectord &position, const Vectord &velocity, const double& mass, const double& volume, const Vector3d& c)
 	{
 		Position.conservativeResize( SET::dim, numpoints + 1 );
 		Velocity.conservativeResize( SET::dim, numpoints + 1);
 		Position.col(numpoints) = position;
 		Velocity.col(numpoints) = velocity;
 		J.push_back(1.0);
+		m.push_back(mass);
+		vol.push_back(volume);
 		F.push_back(Matrixd::Identity());
 		b.push_back(Matrixd::Identity());
 		C.push_back(Matrixd::Zero());

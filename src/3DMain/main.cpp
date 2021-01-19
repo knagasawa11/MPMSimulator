@@ -58,6 +58,10 @@ void ShowSimulationSituation();
 int main(int argc, char *argv[]) {
 	
 
+	int n = omp_get_max_threads();
+	printf("max threads (set): %d\n", n);
+	omp_set_num_threads(n);
+	
 	// Parse command line options
 	if( !PARSE::parseCommandLineOptions( &argc, &argv, mat_params, io_setting ))
 	{

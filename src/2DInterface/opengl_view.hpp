@@ -105,11 +105,11 @@ namespace OPENGL{
 		glViewport(0, 0, w, h);
 
 		glLoadIdentity();
-		glLoadIdentity();
-		gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0);
-		gluLookAt(3.0, 4.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+		//glLoadIdentity();
+		//gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0);
+		//gluLookAt(3.0, 4.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-		//glOrtho(-w / 200.0, w / 200.0, -h / 200.0, h / 200.0, -1.0, 1.0);
+		glOrtho(-w / 200.0, w / 200.0, -h / 200.0, h / 200.0, -1.0, 1.0);
 	}
 
 	inline void idle()
