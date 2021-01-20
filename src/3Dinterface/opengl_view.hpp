@@ -76,78 +76,78 @@ namespace OPENGL{
 		glLineWidth(1.0);
 		glColor3f(1.0, 1.0, 1.0);
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
 		glEnd();
 
 		
 		
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMaxBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
-		glEnd();
-
-		
-		
-		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
-		glEnd();
-
-		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
-		glEnd();
-
-		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMaxBound.z());
 		glEnd();
 
 		
 		
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMin.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMin.y(), sim_setting.SimulationBoxMax.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
 		glEnd();
 
 		glBegin(GL_LINES);
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMin.z());
-		glVertex3f(sim_setting.SimulationBoxMax.x() , sim_setting.SimulationBoxMax.y(), sim_setting.SimulationBoxMax.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glEnd();
+
+		
+		
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMinBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMinBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMaxBound.z());
+		glEnd();
+
+		glBegin(GL_LINES);
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMinBound.z());
+		glVertex3f(sim_setting.SimulationBoxMaxBound.x() , sim_setting.SimulationBoxMaxBound.y(), sim_setting.SimulationBoxMaxBound.z());
 		glEnd();
 		
 		glLineWidth(3.0);
@@ -229,7 +229,7 @@ namespace OPENGL{
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 		//glLoadIdentity();
-		//glRotated(1.0, 0.0, 1.0, 0.0); //Y軸回転
+		glRotated(5.0, 0.0, 5.0, 0.0); //Y軸回転
 		
 		glTranslated(0.0, 0.0, 0.0); //平行移動
 		
@@ -246,7 +246,7 @@ namespace OPENGL{
 		glLoadIdentity();
 		Vector3d lookmid = ( sim_setting.SimulationBoxMin + sim_setting.SimulationBoxMax ) / 2.0;
 		gluPerspective(30.0, (double)w / (double)h, 1.0, 100.0);
-		gluLookAt(3.0, 4.0, 5.0, lookmid.x(), lookmid.y(), lookmid.z(), 0.0, 1.0, 0.0);
+		gluLookAt(12.0, 16.0, 20.0, lookmid.x(), lookmid.y(), lookmid.z(), 0.0, 1.0, 0.0);
 
 		//クォータニオンによる回転
 		//
