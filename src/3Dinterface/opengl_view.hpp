@@ -263,7 +263,7 @@ namespace OPENGL{
 			glutPostRedisplay();
 			std::cout << "elappsed time : " <<sim_setting.iterate_num*sim_setting.dt << std::endl;
 			MPM::WRITE::show();
-			//MPM::WRITE::save_dat_file();
+			MPM::WRITE::save_dat_file();
 			
 			++io_setting.output_frame;
 		}
