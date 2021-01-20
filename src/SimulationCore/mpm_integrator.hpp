@@ -233,7 +233,6 @@ void MPM::Integrater::particle2grid()
 	{
 		per_thread_Velocity.resize( omp_get_max_threads() );
 	}
-
 	if( per_thread_mass.empty() )
 	{
 		per_thread_mass.resize( omp_get_max_threads() );

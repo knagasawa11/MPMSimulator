@@ -39,7 +39,7 @@
 	"#SetPointFromFile":[
 		{
 			"filename":"/Users/kn/Downloads/MPMTest/bunny_pt",
-			"rho":1.0,
+			"rho":1.0
 			"condition":"stick"
 		}
 	],
