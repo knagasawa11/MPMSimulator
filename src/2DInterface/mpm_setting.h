@@ -68,6 +68,7 @@ struct SimulationParameters{
 		double 	box_height 	= 1.0			;
 		double	bound_pad		= 0.1			;
 		double 	dt 					= 0.00001	;
+		double	alpha 			= 0.95		;
 		double 	d_width 		= 0.0125	;
 		double 	end_time 		= 1.0			;
 		int			num_points 	= 2				;
@@ -78,6 +79,7 @@ struct SimulationParameters{
 				, box_height 		(SET::box_height)
 				, bound_pad			(SET::bound_pad)
 				, dt						(SET::dt)
+				,	alpha					(0.95)
 				, d_width				(SET::d_width)
 				, end_time			(SET::end_time)
 				, num_points		(SET::num_points)

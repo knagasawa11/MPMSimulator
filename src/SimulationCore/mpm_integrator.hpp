@@ -199,8 +199,8 @@ void MPM::Integrater::particle2grid()
 		const double particle_mass = sim_state.mp.m[i];
 		
 		const Matrixd Stress = - (sim_state.dt * p_vol) * (4 * width_inv * width_inv * FP);
-		//const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
-		const Matrixd Affine = Stress;
+		const Matrixd Affine = Stress + sim_state.alpha*particle_mass * sim_state.mp.C[i];
+		//const Matrixd Affine = Stress;
 		
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
@@ -281,8 +281,8 @@ void MPM::Integrater::particle2grid()
 		const double particle_mass = sim_state.mp.m[i];
 				
 		const Matrixd Stress = - (sim_state.dt * p_vol) * (4 * width_inv * width_inv * FP);
-		//const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
-		const Matrixd Affine = Stress;
+		const Matrixd Affine = Stress + sim_state.alpha*particle_mass * sim_state.mp.C[i];
+		//const Matrixd Affine = Stress;
 		
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();

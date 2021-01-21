@@ -84,6 +84,9 @@ inline void readJson(const std::string json_file, MPM::MaterialParameters& mat_p
 	std::cout << "-> dt					: " << 	j["SimSetting"]["dt"] 					<< std::endl;
 	sim_params.dt = CheckJson<double>(j,"SimSetting","dt");
 	
+	std::cout << "-> alpha			: " << 	j["SimSetting"]["alpha"] 					<< std::endl;
+	sim_params.alpha = CheckJson<double>(j,"SimSetting","alpha");
+	
 	std::cout << "-> d_width		: " << 	j["SimSetting"]["d_width"] 			<< std::endl;
 	sim_params.d_width = CheckJson<double>(j,"SimSetting","d_width");
 

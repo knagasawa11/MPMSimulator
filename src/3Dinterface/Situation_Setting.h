@@ -132,6 +132,7 @@ inline void Set_SimulationBoxSetting(const MPM::SimulationParameters& sim_params
 	sim_setting.SimulationGridsnum = (sim_setting.SimulationBoxSize / sim_setting.SimulationGridsWidth ).cast<int>();
 	
 	sim_setting.dt = sim_params.dt;
+	sim_setting.alpha =	sim_params.alpha;
 	sim_setting.simulation_end_time  = sim_params.end_time;
 	
 	

@@ -51,6 +51,7 @@ namespace MPM{
 		//static inline std::vector<MaterialGrid> SimulationGrids;
 		//static inline std::vector<MaterialPoint> MaterialPoints;
 		static inline double dt;
+		static inline double alpha;
 		static inline int iterate_num{0};
 		
 
