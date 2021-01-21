@@ -132,6 +132,7 @@ namespace OPENGL{
 		{
 			timer_main.Get_end();
 			timer_main.Show_duration();
+			std::cout << sim_setting.mp.Position.col(100).transpose() << std::endl;
 			exit(0);
 		}
 		

@@ -246,7 +246,7 @@ inline void HerschelBulkley::set_material_parameter()
 	sigma_Y		= SET::MAT_PARAM::sigma_Y;
 }
 
-inline Matrixd HerschelBulkley::cal_particle_stress(const Matrixd& F, const double& Jp, const Matrixd& b)
+Matrixd HerschelBulkley::cal_particle_stress(const Matrixd& F, const double& Jp, const Matrixd& b)
 {
 	
 	const double J = F.determinant();
@@ -282,7 +282,7 @@ struct Functor {
 };
 */
  
-inline std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_correction(const Matrixd& F, const double& Jp, const Matrixd& b)
+std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_correction(const Matrixd& F, const double& Jp, const Matrixd& b)
 {
 	
 	const double J = F.determinant();
@@ -291,6 +291,7 @@ inline std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_corr
 	const double sigma_rt = std::sqrt(2.0/SET::dim)*sigma_Y;
 	const double h_inv		= 1.0/h;
 	double s_pro = mu*dev_b.norm();
+	assert(J>0);
 	
 	
 	//　If yielding condition is violated, compute plastic flow

@@ -197,9 +197,10 @@ void MPM::Integrater::particle2grid()
 		
 		const double p_vol = sim_state.mp.vol[i];
 		const double particle_mass = sim_state.mp.m[i];
-				
+		
 		const Matrixd Stress = - (sim_state.dt * p_vol) * (4 * width_inv * width_inv * FP);
-		const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
+		//const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
+		const Matrixd Affine = Stress;
 		
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
@@ -280,7 +281,8 @@ void MPM::Integrater::particle2grid()
 		const double particle_mass = sim_state.mp.m[i];
 				
 		const Matrixd Stress = - (sim_state.dt * p_vol) * (4 * width_inv * width_inv * FP);
-		const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
+		//const Matrixd Affine = Stress + particle_mass * sim_state.mp.C[i];
+		const Matrixd Affine = Stress;
 		
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
@@ -308,7 +310,7 @@ void MPM::Integrater::particle2grid()
 		}
 	}
 	
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for( std::vector<MatrixXd>::size_type idx = 0; idx < per_thread_Velocity.size(); idx++ )
 	{
 		sim_state.mg.Velocity += per_thread_Velocity[idx];
@@ -461,6 +463,7 @@ void MPM::Integrater::grid2particle()
 		
 		//set basis function on omp thread ID
 		basis_fs[tid].set(d_from_basegrid.cast<double>());
+		
 		const Vectori w = Vectori::Constant(3);
 		const int Max = std::pow(3,SET::dim);
 		for(int l=0; l<Max; ++l)
