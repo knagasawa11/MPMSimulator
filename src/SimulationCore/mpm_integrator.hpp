@@ -165,8 +165,9 @@ inline void MPM::Integrater::integrate()
 	
 	particle2grid();
 	gridAdvance();
-	grid2particle();
 	deformation_update();
+	grid2particle();
+	//deformation_update();
 	advection();
 	
 	updateState();
@@ -274,7 +275,14 @@ void MPM::Integrater::particle2grid()
 		//get omp thread ID
 		const int tid{ omp_get_thread_num() };
 		assert( tid >= 0 );
-
+		
+		/*
+		if(i == (NP-1)){
+		std::cout << "J from F 		:" << sim_state.mp.F[i].determinant() << std::endl;
+		std::cout << "J from b :" << std::sqrt(sim_state.mp.b[i].determinant()) << std::endl;
+		}
+		*/
+		 
 		const Matrixd FP = sim_state.c->cal_particle_stress(sim_state.mp.F[i], sim_state.mp.J[i],sim_state.mp.b[i]);
 		
 		const double p_vol = sim_state.mp.vol[i];
@@ -525,11 +533,14 @@ void MPM::Integrater::deformation_update()
 		const auto f = ( Matrixd::Identity() + sim_state.dt * sim_state.mp.C[i] );
 		const Matrixd F = f * sim_state.mp.F[i];
 		const Matrixd b = f * sim_state.mp.b[i] * f.transpose();
-		
+				
 		// MLS-MPM F Plastic Correction
 		auto [F_new, J_new, b_new] = sim_state.c->cal_F_placstic_correction(F, sim_state.mp.J[i], b);
 		//std::cout << "J     " << sim_state.mp.J[i] << std::endl;
 		//std::cout << "J_new " << J_new << std::endl;
+		
+
+		
 		sim_state.mp.F[i] = std::move(F_new);
 		sim_state.mp.J[i] = std::move(J_new);
 		sim_state.mp.b[i] = std::move(b_new);

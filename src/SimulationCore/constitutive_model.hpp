@@ -290,8 +290,10 @@ std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_correction(
 	const auto dev_b = b_bar - Matrixd::Identity()*b_bar.trace()/SET::dim;
 	const double sigma_rt = std::sqrt(2.0/SET::dim)*sigma_Y;
 	const double h_inv		= 1.0/h;
+	
 	double s_pro = mu*dev_b.norm();
 	assert(J>0);
+	
 	
 	
 	//　If yielding condition is violated, compute plastic flow
@@ -329,6 +331,7 @@ std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_correction(
 	const auto b_new = b_bar_norm*std::pow(J,2.0/SET::dim);
 	
 	//std::cout << b_new.determinant() << " " << F.determinant()*F.determinant() << " " << std::endl;
+	
 	
 	return {F, Jp, b_new};
 }
