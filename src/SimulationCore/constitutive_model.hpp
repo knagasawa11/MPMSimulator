@@ -228,12 +228,14 @@ inline std::tuple<Matrixd, double, Matrixd> SnowPlastic::cal_F_placstic_correcti
 inline void HerschelBulkley::set_material_parameter(const MPM::MaterialParameters& mat_params, const MPM::SimulationParameters& sim_params)
 {
 	std::cout << "HerschelBulkley" << std::endl;
+	
 	kappa 		= mat_params.kappa;
 	mu				= mat_params.mu;
 	eta				= mat_params.eta;
 	h					= mat_params.h;
 	sigma_Y		= mat_params.sigma_Y;
 	dt				= sim_params.dt;
+	
 }
 
 inline void HerschelBulkley::set_material_parameter()
@@ -248,7 +250,6 @@ inline void HerschelBulkley::set_material_parameter()
 
 Matrixd HerschelBulkley::cal_particle_stress(const Matrixd& F, const double& Jp, const Matrixd& b)
 {
-	
 	const double J = F.determinant();
 	const auto b_bar = std::pow(J,-2.0/SET::dim)*b;
 	const auto dev_b = b_bar - Matrixd::Identity()*b_bar.trace()/SET::dim;
@@ -257,7 +258,6 @@ Matrixd HerschelBulkley::cal_particle_stress(const Matrixd& F, const double& Jp,
 	const Matrixd FP = 0.5*kappa*(J + 1.0)*(J - 1.0)*Matrixd::Identity() + mu * dev_b ;
 
 	return std::move(FP);
-
 }
 
 
@@ -314,6 +314,7 @@ std::tuple<Matrixd, double, Matrixd> HerschelBulkley::cal_F_placstic_correction(
 	s_pro = (r.first + r.second) / 2.0;
 	//std::cout << sigma_rt << " " << s_pro << " " << mu*dev_b.norm() << std::endl;
 	//std::cout << sf(s_pro) << std::endl;
+
 	}
 
 	

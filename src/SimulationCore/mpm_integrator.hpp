@@ -165,9 +165,9 @@ inline void MPM::Integrater::integrate()
 	
 	particle2grid();
 	gridAdvance();
-	deformation_update();
-	grid2particle();
 	//deformation_update();
+	grid2particle();
+	deformation_update();
 	advection();
 	
 	updateState();
@@ -194,6 +194,7 @@ void MPM::Integrater::particle2grid()
 	#ifndef USEOPENMP
 	for(int i=0; i<NP; ++i)
 	{
+		
 		const Matrixd FP = sim_state.c->cal_particle_stress(sim_state.mp.F[i], sim_state.mp.J[i],sim_state.mp.b[i]);
 		
 		const double p_vol = sim_state.mp.vol[i];
@@ -206,12 +207,13 @@ void MPM::Integrater::particle2grid()
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
 		
+		
 		basis_f.set(d_from_basegrid.cast<double>());
 
 		const Vectord mv = sim_state.mp.Velocity.col(i) * particle_mass;
 		const Vectori w = Vectori::Constant(3);
 
-				for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l)
+		for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l)
 		{
 			const Vectori node 			= MPM::flat2node(l, w);
 			const Vectori base_node = base_grid + node;
@@ -221,7 +223,9 @@ void MPM::Integrater::particle2grid()
 			sim_state.mg.Mass[ MPM::node2flat(base_node, sim_state.SimulationGridsnum) ] += particle_mass * basis_f.tensor(node);
 			
 			sim_state.mg.ValiedGridNodeIndices.push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
+	
 		}
+		
 	}
 	
 	#else //IF use OpenMP
@@ -292,8 +296,10 @@ void MPM::Integrater::particle2grid()
 		const Matrixd Affine = Stress + sim_state.alpha*particle_mass * sim_state.mp.C[i];
 		//const Matrixd Affine = Stress;
 		
+		
 		const Vectori base_grid =	((sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin ) *width_inv - Vectord::Constant(0.5)).cast<int>();
 		const Vectord d_from_basegrid = (sim_state.mp.Position.col(i) - sim_state.SimulationBoxMin )*width_inv - base_grid.cast<double>();
+		
 		
 		//set basis function on omp thread ID
 		basis_fs[tid].set(d_from_basegrid.cast<double>());
@@ -302,11 +308,12 @@ void MPM::Integrater::particle2grid()
 		const Vectord mv = sim_state.mp.Velocity.col(i) * particle_mass;
 		const Vectori w = Vectori::Constant(3);
 
+		
 		for(int l=0, Max = std::pow(3,SET::dim); l<Max; ++l)
 		{
 			const Vectori node 			= MPM::flat2node(l, w);
 			const Vectori base_node = base_grid + node;
-			const Vectord distance_from_index = (node.cast<double>() - d_from_basegrid) * sim_state.SimulationGridsWidth;
+			const Vectord distance_from_index = ( node.cast<double>() - d_from_basegrid ) * sim_state.SimulationGridsWidth;
 
 			per_thread_Velocity[tid].col( MPM::node2flat(base_node, sim_state.SimulationGridsnum) ) += basis_fs[tid].tensor(node) * ( mv + Affine * distance_from_index );
 
@@ -314,8 +321,8 @@ void MPM::Integrater::particle2grid()
 			
 			per_thread_ValiedGridNodeIndices[tid].push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
 			//sim_state.mg.ValiedGridNodeIndices.push_back(MPM::node2flat(base_node, sim_state.SimulationGridsnum));
-
 		}
+		
 	}
 	
 	//#pragma omp parallel for
@@ -403,9 +410,9 @@ void MPM::Integrater::grid2particle()
 	std::fill(sim_state.mp.C.begin(), sim_state.mp.C.end(), Matrixd::Zero());
 
 	
-	
 
 	const int NP=sim_state.mp.numpoints;
+	
 	#ifndef USEOPENMP
 	for(int i=0; i<NP; ++i)
 	{
@@ -428,6 +435,7 @@ void MPM::Integrater::grid2particle()
 			sim_state.mp.C[i] += 4 * width_inv * basis_f.tensor(node) * sim_state.mg.Velocity.col(MPM::node2flat(base_node, sim_state.SimulationGridsnum) )*(distance_from_index).transpose();
 		}
 	}
+	
 	#else //IF use OpenMP
 	
 	//Set per_thread memories
@@ -514,9 +522,34 @@ inline void MPM::Integrater::advection()
 	for(int i=0; i<NP; ++i)
 	{
 		sim_state.mp.Position.col(i) += sim_state.dt*sim_state.mp.Velocity.col(i);
+		
+		// Boundary and Collision behaviours ------------------
+		const double bd_bottom = sim_state.SimulationGridsWidth*0.0;
+		if(sim_state.mp.Position.col(i).y() < ( bd_bottom + sim_state.SimulationBoxMinBound.y() ) )
+		{
+			sim_state.mg.Velocity.col(i) = Vectord::Constant(0.0);
+			//sim_state.mg.Velocity.col(i).y() = std::max(0.0,sim_state.mg.Velocity.col(i).y());
+		}
+
+		if( ( sim_state.mp.Position.col(i).array() < ( sim_state.SimulationBoxMinBound +  bd_bottom*Vectord::Ones() ).array() ).any() || (sim_state.mp.Position.col(i).array() > (sim_state.SimulationBoxMaxBound - bd_bottom*Vectord::Ones() ).array() ).any() )
+		{
+			if(sim_state.mp.Position.col(i).y() < bd_bottom + sim_state.SimulationBoxMinBound.y() )
+			{
+				continue;
+			}
+			sim_state.mp.Velocity.col(i) = Vectord::Constant(0.0);
+		}
+		
+		#ifdef MPM3D //Apply 3D rigid body collision
+		sim_state.mp.Velocity.col(i) = situation_set.boundary_conditions.ComputeBoundaryVelocity(sim_state.mp.Position.col(i), sim_state.mp.Velocity.col(i));
+		#endif//----------------------------------------------------
+		
+	//}
+
+		
+		
 	}
 	
-
 }
 
 
@@ -540,7 +573,6 @@ void MPM::Integrater::deformation_update()
 		//std::cout << "J_new " << J_new << std::endl;
 		
 
-		
 		sim_state.mp.F[i] = std::move(F_new);
 		sim_state.mp.J[i] = std::move(J_new);
 		sim_state.mp.b[i] = std::move(b_new);

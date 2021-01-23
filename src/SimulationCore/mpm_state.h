@@ -196,6 +196,7 @@ namespace MPM{
 		for (int i=0; i<total_grids_num; ++i)
 		{
 			//auto I = flat2node(i);
+			
 			auto I = MPM::flat2node<SET::dim>(i, SimulationGridsnum);
 			const Vectord mg_pos = I.cast<double>()*SimulationGridsWidth + SimulationBoxMin;
 			//auto p = Eigen::Vector2d{I.x(), i};
